@@ -12,7 +12,7 @@
         android:textSize="32sp"
         android:textColor="@color/purple"
         android:textStyle="bold"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="12dp"
         />
     <androidx.recyclerview.widget.RecyclerView

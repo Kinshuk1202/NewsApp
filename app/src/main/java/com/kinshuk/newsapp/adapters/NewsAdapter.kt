@@ -1,10 +1,12 @@
 package com.kinshuk.newsapp.adapters
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +15,10 @@ import com.kinshuk.newsapp.R
 import com.kinshuk.newsapp.models.Article
 import kotlinx.coroutines.GlobalScope
 import org.jetbrains.annotations.Async
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_DATE_TIME
 
 class NewsAdapter:RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
     inner class ArticleViewHolder(itemView: View):RecyclerView.ViewHolder(itemView)
@@ -42,6 +48,7 @@ class NewsAdapter:RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
         return differ.currentList.size
     }
     private var onItemClickListener: ((Article)->Unit) ?= null
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ArticleViewHolder, position: Int) {
         val article = differ.currentList[position]
         articleImage = holder.itemView.findViewById(R.id.articleImage)
@@ -51,10 +58,10 @@ class NewsAdapter:RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
         articleDateTime = holder.itemView.findViewById(R.id.articleDateTime)
         holder.itemView.apply {
             Glide.with(this).load(article.urlToImage).into(articleImage)
-            articleSource.text = article.source.name
-            articleTitle.text = article.title
-            articleDescription.text = article.description
-            articleDateTime.text = article.publishedAt
+            articleSource.text = article.source!!.name
+            articleTitle.text = article!!.title
+            articleDescription.text = article!!.description
+            articleDateTime.text = article!!.publishedAt?.let { convertUtcToLocalTime(it) }
 
             setOnClickListener{
                 onItemClickListener ?.let{
@@ -65,5 +72,20 @@ class NewsAdapter:RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
     }
     fun setOnItemClickListner(listner:(Article)->Unit){
         onItemClickListener = listner
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun convertUtcToLocalTime(utcTime: String): String {
+        // Parse the UTC time string
+        val utcDateTime = OffsetDateTime.parse(utcTime, ISO_DATE_TIME)
+
+        // Convert to local time zone
+        val localDateTime = utcDateTime.atZoneSameInstant(ZoneId.systemDefault())
+
+        // Define your desired format
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+        // Format the local time
+        return localDateTime.format(formatter)
     }
 }
